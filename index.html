@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>musicPlayer</title>
+        <style>
+        html,body{
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body{
+            display: flex;
+            flex-direction: column;
+        }
+        
+        footer{
+            height: 50px;
+            background-color: rgb(88, 49, 49);
+            color: #e09d9a;
+            font-size: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        footer p{
+            margin: 0;
+        }
+
+        #music{
+            flex: 1;
+            display: flex;
+        }
+
+        .left{
+            flex:1;
+            height: 100%;
+            min-width: 325px;
+            background-color: #da362c;
+            overflow: auto;
+        }
+
+        .left .left-top{
+            height: 110px;
+            width: 50%;
+            background-color: #da362c;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            box-shadow: 0 -5px 18px rgb(223, 92, 92) inset;
+        }
+        
+        .left .searchMusic{
+            width: 70%;
+            height: 40px;
+            border-radius: 20px;
+            outline: none;
+            font-size: 20px;
+            font-weight: 700;
+            text-align: center;
+            box-sizing: border-box;
+        }
+        
+        .left ul{
+            list-style: none;
+            padding: 110px 40px 0 40px;
+            
+        }
+
+        .left .list-item {
+            margin-right: 10px;
+            color: white;
+            margin-bottom: 3px;
+            background-color: #c7645a;
+            border-radius: 5px;
+            padding: 5px 10px;
+        }
+
+        .left .list-enter-active, .left .list-leave-active {
+            transition: all 1s;
+        }
+
+        .left .list-enter, .left .list-leave-to {
+            opacity: 0;
+            transform: translateY(90px);
+        }
+
+        /* 以下是右侧部分 */
+        .right{
+            flex:1;
+            height: 100%;
+            background-color: #9c1109;
+            min-width: 325px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .right .right-top{
+            height: 300px;
+            padding-top: 40px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .right .coverPic{
+            border-radius: 50%;
+            width: 180px;
+            height: 180px;
+        }
+
+        .right audio{
+            width: 300px;
+        }
+        
+        @keyframes autoRotate{
+            0%{
+                transform: rotateZ(0deg) scale(.8)
+            }50%{
+                transform: rotateZ(180deg) scale(1.2)
+            }100%{
+                transform: rotateZ(360deg) scale(.8)
+            }
+        }
+
+        .rotate{
+            animation: autoRotate 20s infinite linear;
+        }
+
+        .pause{
+            animation-play-state: paused;
+        }
+
+        /* 以下是评论区 */
+        .allComments{
+            padding: 0;
+            flex:1;
+            width: 100%;
+            padding: 0 20px;
+            box-sizing: border-box;
+            overflow: auto;
+        }
+
+        .comments{
+            display: flex;
+            background-color: #c7645a;
+            color: white;
+            margin-bottom: 3px;
+            border-radius: 10px;
+        }
+
+        .comments .comments-left{
+            width: 65px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .comments .comments-left .icon{
+            width: 60%;
+            border-radius: 50%;
+        }
+
+        .comments .comments-right{
+            flex: 1;
+        }
+
+        .comments .comments-right .name{
+            margin: 5px 0;
+            color: #902217;
+        }
+
+        .comments .comments-right .content{
+            margin: 5px 0;
+            font-size: 12px;
+        }
+        
+        /* 以下是评论的动画 */
+        .comment-item {
+            /* display: inline-block; */
+            margin-right: 10px;
+        }
+
+        .comment-enter-active, .comment-leave-active {
+            transition: all 1s;
+        }
+
+        .comment-enter, .comment-leave-to {
+            opacity: 0;
+            transform: translateX(100px);
+        }
+
+    </style>
+    </head>
+    <body>
+        <div id="music">
+            <div class="left">
+                <div class="left-top">
+                    <input type="text" v-model="musicName" @keyup.enter="search"
+                        class="searchMusic" placeholder="请 输 入 歌 名">
+                </div>
+
+                <transition-group name="list" tag="ul">
+                    <li v-for="item in songList" v-bind:key="item.id"
+                        class="list-item" @dblclick="getMusicUrl(item.id)">
+                        歌手: {{ item.artists[0].name }}; 歌曲: {{ item.name }}; 专辑:
+                        {{ item.album.name }}
+                    </li>
+                </transition-group>
+            </div>
+            <div class="right">
+                <div class="right-top">
+                    <img :src="coverPicUrl==''?'./images/coverPic.jpeg':coverPicUrl" alt="coverPic" class="coverPic">
+                    <audio :src="musicUrl" controls autoplay></audio>
+                </div>
+                <!-- 以下为评论区 -->
+                <transition-group name="comment" tag="ul" class="allComments">
+                    <li v-for="(item,index) in commentsList" v-bind:key="item.commentId" class="comment-item comments" :style="{transitionDelay:index*100 + 'ms'}">
+                        <div class="comments-left">
+                            <img :src="item.user.avatarUrl" alt="评论者头像" class="icon">
+                        </div>
+                        <div class="comments-right">
+                            <p class="name">{{item.user.nickname}}</p>
+                            <p class="content">{{item.content}}</p>
+                        </div>
+                    </li>
+                </transition-group>
+                
+            </div>
+        </div>
+        <footer>
+            <p>仅供学习交流使用</p>
+            <p>接口来自: 网易云音乐API</p>
+        </footer>
+
+    </body>
+    <script src="./lib/vue/vue v2.5.17.js"></script>
+    <script src="./lib/axios/axios.min.js"></script>
+    <script>
+
+    let music = new Vue({
+        el:"#music",
+        data:{
+            musicName:"",
+            songList:[],
+            musicUrl:"",
+            coverPicUrl:"",
+            commentsList:[]
+        },
+        methods:{
+            //搜索歌曲
+            search(){
+                axios.get('https://autumnfish.cn/search?keywords='+this.musicName).then(response=>{
+                    this.songList=response.data.result.songs;
+                })
+            },
+
+            //获取选中歌曲的url
+            getMusicUrl(musicId){
+                axios.get('https://autumnfish.cn/music/url?id=' + musicId).then(response=>{
+                    this.musicUrl = response.data.data[0].url;
+                })
+
+                //获取歌曲封面图片
+                axios.get('https://autumnfish.cn/song/detail?ids=' + musicId).then(response=>{
+                    this.coverPicUrl = response.data.songs[0].al.picUrl;
+                })
+                
+                //获取评论信息
+                axios.get('https://autumnfish.cn/comment/music?id=' + musicId).then(response=>{
+                    // console.log(response.data.hotComments);
+                    this.commentsList = response.data.hotComments;
+                    
+                })
+
+            }
+        }
+    })
+
+    document.querySelector("audio").onplay=()=>{
+        document.querySelector(".right .coverPic").classList.remove("pause");
+        document.querySelector(".right .coverPic").classList.add("rotate");
+    }
+
+    document.querySelector("audio").onpause=()=>{
+        document.querySelector(".right .coverPic").classList.add("pause");
+    }
+
+
+
+
+</script>
+</html>
